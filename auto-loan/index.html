@@ -373,46 +373,78 @@ const val = id => { const v = parseFloat($(id).value); return isNaN(v) ? 0 : v; 
 const setLbl = (id, text) => { const el = $(id); if (el) el.textContent = text; };
 
 // ─── Market estimate data ───────────────────────────────────────────────────
-// Trim → tier (1=entry, 2=mid, 3=performance, 4=luxury)
+// AT4 and Z71 use specific year × mileage lookup tables (dealer retail prices).
+// All other trims fall back to the tier-based formula.
+// key: lookup table id | tier: fallback tier (1=entry … 4=luxury)
 const TRIMS = {
   yukon: [
-    { label: 'SLE',              tier: 1 },
-    { label: 'SLT',              tier: 2 },
-    { label: 'AT4',              tier: 3 },
-    { label: 'Denali',           tier: 4 },
-    { label: 'Denali Ultimate',  tier: 4 },
+    { label: 'AT4',              key: 'yukon-at4', tier: 3 },
+    { label: 'Denali',           key: null,        tier: 4 },
+    { label: 'Denali Ultimate',  key: null,        tier: 4 },
+    { label: 'SLT',              key: null,        tier: 2 },
+    { label: 'SLE',              key: null,        tier: 1 },
   ],
   tahoe: [
-    { label: 'LS',               tier: 1 },
-    { label: 'LT',               tier: 1 },
-    { label: 'Z71',              tier: 2 },
-    { label: 'RST',              tier: 2 },
-    { label: 'Premier',          tier: 3 },
-    { label: 'High Country',     tier: 4 },
+    { label: 'Z71',              key: 'tahoe-z71', tier: 2 },
+    { label: 'RST',              key: null,        tier: 2 },
+    { label: 'Premier',          key: null,        tier: 3 },
+    { label: 'High Country',     key: null,        tier: 4 },
+    { label: 'LT',               key: null,        tier: 1 },
+    { label: 'LS',               key: null,        tier: 1 },
   ],
 };
 
-// Base retention at 1 year / 15k avg miles, and annual depreciation after yr1
-// [tier1, tier2, tier3, tier4]
-const BASE_RET  = [0.82, 0.85, 0.87, 0.90]; // % of MSRP at 1yr, 15k mi
-const ANNUAL_DEP = [0.105, 0.090, 0.080, 0.070]; // yr-over-yr drop after yr1
-const MILE_ADJ  = 0.015; // % per 10k miles from avg (15k/yr)
+// Specific tables: [[odometer, pct_of_msrp_midpoint], …]
+// Range shown to user is mid ± 2%. Source: CPO/used dealer market 2021–2025 4th-gen.
+const SPECIFIC_DATA = {
+  'yukon-at4': {
+    2025: [[10000,0.915],[15000,0.895],[20000,0.875],[25000,0.855],[30000,0.840],[35000,0.825],[40000,0.810],[50000,0.790],[60000,0.770]],
+    2024: [[10000,0.870],[15000,0.850],[20000,0.830],[25000,0.810],[30000,0.790],[35000,0.775],[40000,0.760],[50000,0.740],[60000,0.720]],
+    2023: [[10000,0.820],[15000,0.800],[20000,0.780],[25000,0.760],[30000,0.740],[35000,0.720],[40000,0.705],[50000,0.685],[60000,0.665]],
+    2022: [[10000,0.770],[15000,0.750],[20000,0.730],[25000,0.710],[30000,0.695],[35000,0.675],[40000,0.660],[50000,0.640],[60000,0.620]],
+    2021: [[10000,0.720],[15000,0.700],[20000,0.680],[25000,0.660],[30000,0.645],[35000,0.630],[40000,0.615],[50000,0.595],[60000,0.575]],
+  },
+  'tahoe-z71': {
+    2025: [[10000,0.895],[15000,0.875],[20000,0.855],[25000,0.835],[30000,0.820],[35000,0.805],[40000,0.790],[50000,0.770],[60000,0.750]],
+    2024: [[10000,0.850],[15000,0.830],[20000,0.810],[25000,0.790],[30000,0.770],[35000,0.750],[40000,0.740],[50000,0.720],[60000,0.700]],
+    2023: [[10000,0.800],[15000,0.780],[20000,0.760],[25000,0.740],[30000,0.720],[35000,0.700],[40000,0.685],[50000,0.665],[60000,0.645]],
+    2022: [[10000,0.750],[15000,0.730],[20000,0.710],[25000,0.690],[30000,0.675],[35000,0.655],[40000,0.640],[50000,0.620],[60000,0.600]],
+    2021: [[10000,0.700],[15000,0.680],[20000,0.660],[25000,0.640],[30000,0.625],[35000,0.610],[40000,0.595],[50000,0.575],[60000,0.555]],
+  },
+};
 
-function marketEstimate(modelYear, odometer, tier) {
+// Tier-based fallback constants [tier1 … tier4]
+const BASE_RET   = [0.82, 0.85, 0.87, 0.90];
+const ANNUAL_DEP = [0.105, 0.090, 0.080, 0.070];
+const MILE_ADJ   = 0.015;
+
+function interpolatePct(points, miles) {
+  if (miles <= points[0][0]) return points[0][1];
+  if (miles >= points[points.length - 1][0]) return points[points.length - 1][1];
+  for (let i = 0; i < points.length - 1; i++) {
+    if (miles >= points[i][0] && miles <= points[i + 1][0]) {
+      const t = (miles - points[i][0]) / (points[i + 1][0] - points[i][0]);
+      return points[i][1] + t * (points[i + 1][1] - points[i][1]);
+    }
+  }
+  return points[points.length - 1][1];
+}
+
+function marketEstimate(modelYear, odometer, tier, key) {
+  // Use specific table if available for this key + year
+  if (key && SPECIFIC_DATA[key]?.[modelYear]) {
+    const mid = interpolatePct(SPECIFIC_DATA[key][modelYear], odometer);
+    return { lo: mid - 0.02, hi: mid + 0.02, specific: true };
+  }
+  // Fallback: tier-based formula
   const t = tier - 1;
-  const ageYears = Math.max(0.25, new Date().getFullYear() - modelYear + 0.5);
-  const avgMiles = ageYears * 15000;
-  const milesDelta = odometer - avgMiles; // positive = more miles than avg
-
-  // Depreciate from base retention
-  const dep = Math.max(0, ageYears - 1) * ANNUAL_DEP[t];
-  const baseRet = Math.max(0.35, BASE_RET[t] - dep);
-
-  // Mileage adjustment: ±1.5% per 10k miles from average
-  const mileAdj = -(milesDelta / 10000) * MILE_ADJ;
-  const mid = Math.min(0.98, Math.max(0.35, baseRet + mileAdj));
-
-  return { lo: mid - 0.025, hi: mid + 0.025 };
+  const ageYears  = Math.max(0.25, new Date().getFullYear() - modelYear + 0.5);
+  const avgMiles  = ageYears * 15000;
+  const dep       = Math.max(0, ageYears - 1) * ANNUAL_DEP[t];
+  const baseRet   = Math.max(0.35, BASE_RET[t] - dep);
+  const mileAdj   = -((odometer - avgMiles) / 10000) * MILE_ADJ;
+  const mid       = Math.min(0.98, Math.max(0.35, baseRet + mileAdj));
+  return { lo: mid - 0.025, hi: mid + 0.025, specific: false };
 }
 
 // ─── Vehicle profile UI ──────────────────────────────────────────────────────
@@ -427,7 +459,8 @@ function onProfileChange() {
     TRIMS[profile].forEach(t => {
       const opt = document.createElement('option');
       opt.value = t.tier;
-      opt.textContent = t.label;
+      opt.dataset.key = t.key || '';
+      opt.textContent = t.label + (t.key ? ' ★' : '');
       trimSel.appendChild(opt);
     });
   } else {
@@ -541,7 +574,9 @@ function calc() {
   const gf     = val('gf');
   const yr     = val('yr');
   const odo    = val('odo');
-  const tier   = parseInt($('trim-sel').value) || 0;
+  const trimOpt = $('trim-sel').selectedOptions[0];
+  const tier    = parseInt(trimOpt?.value) || 0;
+  const trimKey = trimOpt?.dataset.key || '';
 
   // Live labels
   if (msrp)   setLbl('lbl-msrp', fmt(msrp));
@@ -567,7 +602,7 @@ function calc() {
 
   let mktLo = 0, mktHi = 0;
   if (showMarket) {
-    const { lo, hi } = marketEstimate(yr, odo, tier);
+    const { lo, hi } = marketEstimate(yr, odo, tier, trimKey);
     mktLo = msrp * lo;
     mktHi = msrp * hi;
     $('n-market').textContent = fmt(mktLo) + ' – ' + fmt(mktHi);
