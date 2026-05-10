@@ -10,38 +10,24 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #f5f4f0;
-    --surface: #ffffff;
-    --border: #e2e0d8;
-    --text: #111;
-    --muted: #888;
-    --good: #166534;
-    --good-bg: #dcfce7;
-    --warn: #92400e;
-    --warn-bg: #fef3c7;
-    --bad: #991b1b;
-    --bad-bg: #fee2e2;
-    --mono: 'DM Mono', monospace;
-    --sans: 'DM Sans', sans-serif;
+    --bg: #f5f4f0; --surface: #fff; --border: #e2e0d8;
+    --text: #111; --muted: #888;
+    --good: #166534; --good-bg: #dcfce7;
+    --warn: #92400e; --warn-bg: #fef3c7;
+    --bad: #991b1b;  --bad-bg:  #fee2e2;
+    --mono: 'DM Mono', monospace; --sans: 'DM Sans', sans-serif;
   }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px 56px; max-width: 600px; margin: 0 auto; }
 
-  body {
-    font-family: var(--sans);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 24px 16px 56px;
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  header { margin-bottom: 24px; }
+  header { margin-bottom: 24px; display: flex; align-items: flex-start; justify-content: space-between; }
+  header .hd { flex: 1; }
   header .back { font-size: 11px; color: var(--muted); text-decoration: none; display: inline-block; margin-bottom: 10px; }
   header .back:hover { color: var(--text); }
   header h1 { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-  header p { font-size: 22px; font-weight: 300; color: var(--text); letter-spacing: -0.02em; }
+  header p { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; }
+  .clear-btn { margin-top: 12px; height: 34px; padding: 0 14px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; font-family: var(--sans); font-size: 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .clear-btn:hover { border-color: #aaa; color: var(--text); }
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
   .card-title { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
@@ -49,9 +35,10 @@
   .field { margin-bottom: 14px; }
   .field:last-child { margin-bottom: 0; }
   .field label { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-  .field label .lval { font-family: var(--mono); font-size: 11px; color: var(--text); }
+  .field label .lval  { font-family: var(--mono); font-size: 11px; color: var(--text); }
   .field label .llink { font-family: var(--mono); font-size: 11px; color: #2563eb; text-decoration: none; }
   .field label .llink:hover { text-decoration: underline; }
+  .field label .lhint { font-size: 11px; color: var(--muted); font-style: italic; }
 
   .field input, .field select {
     width: 100%; height: 40px; border: 1px solid var(--border); border-radius: 8px;
@@ -61,49 +48,41 @@
   .field input:focus, .field select:focus { border-color: #aaa; background: #fff; }
 
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 
   /* VIN */
   .vin-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; }
   .vin-row .field { flex: 1; margin-bottom: 0; }
-  .decode-btn {
-    height: 40px; padding: 0 16px; background: var(--text); color: #fff;
-    border: none; border-radius: 8px; font-family: var(--sans); font-size: 13px;
-    font-weight: 500; cursor: pointer; white-space: nowrap; flex-shrink: 0;
-  }
+  .decode-btn { height: 40px; padding: 0 16px; background: var(--text); color: #fff; border: none; border-radius: 8px; font-family: var(--sans); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
   .decode-btn:disabled { opacity: 0.55; cursor: default; }
 
-  .vehicle-pill {
-    background: var(--bg); border-radius: 8px; padding: 12px 14px;
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
-  }
+  .vehicle-pill { background: var(--bg); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
   .vehicle-name { font-size: 15px; font-weight: 500; }
   .vehicle-trim { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
-  .ext-link { font-size: 12px; color: #2563eb; text-decoration: none; white-space: nowrap; }
+  .ext-link { font-size: 12px; color: #2563eb; text-decoration: none; }
   .ext-link:hover { text-decoration: underline; }
   .error-msg { font-size: 12px; color: var(--bad); margin-top: 6px; }
 
-  /* Negotiation analytics */
+  /* Negotiation */
   .nego-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
   .nego-stat { background: var(--bg); border-radius: 8px; padding: 10px 12px; }
   .nego-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
   .nego-value { font-family: var(--mono); font-size: 16px; font-weight: 500; }
 
-  .verdict {
-    border-radius: 8px; padding: 10px 14px; display: flex; align-items: center;
-    justify-content: space-between; margin-top: 10px; background: var(--bg);
-  }
+  .verdict { border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-top: 10px; background: var(--bg); }
   .verdict-label { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
-  .verdict-value { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  .verdict-value { font-family: var(--mono); font-size: 12px; font-weight: 500; text-align: right; max-width: 60%; }
   .good-row { background: var(--good-bg); color: var(--good); }
   .warn-row { background: var(--warn-bg); color: var(--warn); }
   .bad-row  { background: var(--bad-bg);  color: var(--bad); }
 
-  /* Deal summary metrics */
+  /* Deal metrics */
   .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
   .metric { background: var(--bg); border-radius: 8px; padding: 10px 12px; }
   .metric.accent { border: 1px solid #bbb; }
   .metric-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
   .metric-value { font-family: var(--mono); font-size: 16px; font-weight: 500; }
+  .metric-sub { font-size: 10px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
 
   /* Financing columns */
   .fin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -130,25 +109,22 @@
   .stat-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
   .stat-value { font-family: var(--mono); font-size: 18px; font-weight: 500; }
   .stat-sub { font-size: 10px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
-  .good { color: var(--good); }
-  .bad  { color: var(--bad); }
-
+  .good { color: var(--good); } .bad { color: var(--bad); }
   .section-gap { margin-top: 16px; margin-bottom: 12px; }
 
-  @media (max-width: 400px) {
-    .fin-grid { grid-template-columns: 1fr; }
-    .pay-grid { grid-template-columns: 1fr; }
-  }
-
+  @media (max-width: 400px) { .fin-grid, .pay-grid { grid-template-columns: 1fr; } }
   footer { text-align: center; font-size: 10px; color: var(--muted); margin-top: 8px; letter-spacing: 0.04em; }
 </style>
 </head>
 <body>
 
 <header>
-  <a class="back" href="../">← Auto Shopping</a>
-  <h1>Auto Loan</h1>
-  <p>Purchase & financing calculator</p>
+  <div class="hd">
+    <a class="back" href="../">← Auto Shopping</a>
+    <h1>Auto Loan</h1>
+    <p>Purchase & financing calculator</p>
+  </div>
+  <button class="clear-btn" onclick="clearAll()">Clear all</button>
 </header>
 
 <!-- Vehicle -->
@@ -169,13 +145,37 @@
     <a id="carfax-link" href="#" target="_blank" class="ext-link">Carfax ↗</a>
   </div>
   <div id="vin-error" class="error-msg" style="display:none"></div>
+  <div class="row3">
+    <div class="field">
+      <label>Model year <span class="lval" id="lbl-yr"></span></label>
+      <input type="number" id="yr" placeholder="2024" min="2000" max="2030" step="1">
+    </div>
+    <div class="field">
+      <label>Odometer <span class="lval" id="lbl-odo"></span></label>
+      <input type="number" id="odo" placeholder="miles" min="0" step="500">
+    </div>
+    <div class="field">
+      <label>Profile <span class="lhint">for pricing</span></label>
+      <select id="profile" onchange="onProfileChange()">
+        <option value="">Generic</option>
+        <option value="yukon">Yukon</option>
+        <option value="tahoe">Tahoe</option>
+      </select>
+    </div>
+  </div>
+  <div class="field" id="trim-field" style="display:none">
+    <label>Trim</label>
+    <select id="trim-sel" onchange="calc()">
+      <option value="">Select trim…</option>
+    </select>
+  </div>
 </div>
 
 <!-- Negotiation -->
 <div class="card">
   <div class="card-title">Negotiation</div>
   <div class="field">
-    <label>MSRP / Retail <span class="lval" id="lbl-msrp"></span></label>
+    <label>MSRP — original sticker <span class="lval" id="lbl-msrp"></span></label>
     <input type="number" id="msrp" min="0" step="100" placeholder="0">
   </div>
   <div class="row2">
@@ -188,6 +188,8 @@
       <input type="number" id="target" min="0" step="100" placeholder="0">
     </div>
   </div>
+  <p style="font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:14px">Dealer asking flows into financing. Target is your walk-away goal.</p>
+
   <div class="nego-grid">
     <div class="nego-stat">
       <div class="nego-label">Discount from MSRP</div>
@@ -205,10 +207,22 @@
       <div class="nego-label">Target off MSRP</div>
       <div class="nego-value" id="n-tgt-pct">—</div>
     </div>
+    <div class="nego-stat" id="market-est-stat" style="display:none">
+      <div class="nego-label">Market estimate</div>
+      <div class="nego-value" id="n-market">—</div>
+    </div>
+    <div class="nego-stat" id="market-vs-stat" style="display:none">
+      <div class="nego-label">vs. market</div>
+      <div class="nego-value" id="n-mkt-vs">—</div>
+    </div>
   </div>
   <div class="verdict" id="nego-verdict">
     <span class="verdict-label">Deal status</span>
     <span class="verdict-value" id="n-status">Enter MSRP and asking price</span>
+  </div>
+  <div class="verdict" id="market-verdict" style="display:none">
+    <span class="verdict-label">vs. market</span>
+    <span class="verdict-value" id="n-mkt-verdict">—</span>
   </div>
 </div>
 
@@ -236,7 +250,7 @@
     </div>
   </div>
   <div class="field">
-    <label>Sales tax % <span class="lval" id="lbl-tr"></span></label>
+    <label>Sales tax rate <span class="lval" id="lbl-tr"></span></label>
     <input type="number" id="tr" value="6.25" min="0" step="0.01">
   </div>
   <div class="metric-grid">
@@ -245,8 +259,9 @@
       <div class="metric-value" id="s-nte">—</div>
     </div>
     <div class="metric">
-      <div class="metric-label">Tax (trade-in credit)</div>
+      <div class="metric-label">Sales tax</div>
       <div class="metric-value" id="s-tax">—</div>
+      <div class="metric-sub" id="s-tax-note"></div>
     </div>
     <div class="metric">
       <div class="metric-label">TT&amp;L total</div>
@@ -317,7 +332,6 @@
       </div>
     </div>
   </div>
-
   <div class="card-title section-gap">Cash Flow &amp; Arbitrage</div>
   <div class="stat-grid">
     <div class="stat">
@@ -341,7 +355,6 @@
       <div class="stat-sub">above balloon</div>
     </div>
   </div>
-
   <div class="breakdown" style="margin-top:16px">
     <div class="br-row"><span>GFV (balloon due)</span><span id="r-gd">—</span></div>
     <div class="br-row"><span>Market value at term (45–55% of MSRP)</span><span id="r-mv">—</span></div>
@@ -350,16 +363,81 @@
   </div>
 </div>
 
-<footer>NHTSA VIN decode · RBFCU VehicleVantage · TX trade-in tax credit applied</footer>
+<footer>NHTSA VIN decode · RBFCU VehicleVantage · TX sales tax applies trade-in credit</footer>
 
 <script>
 const $ = id => document.getElementById(id);
 const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
 const fmtPct = (n, d=1) => n.toFixed(d) + '%';
-const val = id => parseFloat($(id).value) || 0;
+const val = id => { const v = parseFloat($(id).value); return isNaN(v) ? 0 : v; };
 const setLbl = (id, text) => { const el = $(id); if (el) el.textContent = text; };
 
-// VIN Decode via NHTSA public API
+// ─── Market estimate data ───────────────────────────────────────────────────
+// Trim → tier (1=entry, 2=mid, 3=performance, 4=luxury)
+const TRIMS = {
+  yukon: [
+    { label: 'SLE',              tier: 1 },
+    { label: 'SLT',              tier: 2 },
+    { label: 'AT4',              tier: 3 },
+    { label: 'Denali',           tier: 4 },
+    { label: 'Denali Ultimate',  tier: 4 },
+  ],
+  tahoe: [
+    { label: 'LS',               tier: 1 },
+    { label: 'LT',               tier: 1 },
+    { label: 'Z71',              tier: 2 },
+    { label: 'RST',              tier: 2 },
+    { label: 'Premier',          tier: 3 },
+    { label: 'High Country',     tier: 4 },
+  ],
+};
+
+// Base retention at 1 year / 15k avg miles, and annual depreciation after yr1
+// [tier1, tier2, tier3, tier4]
+const BASE_RET  = [0.82, 0.85, 0.87, 0.90]; // % of MSRP at 1yr, 15k mi
+const ANNUAL_DEP = [0.105, 0.090, 0.080, 0.070]; // yr-over-yr drop after yr1
+const MILE_ADJ  = 0.015; // % per 10k miles from avg (15k/yr)
+
+function marketEstimate(modelYear, odometer, tier) {
+  const t = tier - 1;
+  const ageYears = Math.max(0.25, new Date().getFullYear() - modelYear + 0.5);
+  const avgMiles = ageYears * 15000;
+  const milesDelta = odometer - avgMiles; // positive = more miles than avg
+
+  // Depreciate from base retention
+  const dep = Math.max(0, ageYears - 1) * ANNUAL_DEP[t];
+  const baseRet = Math.max(0.35, BASE_RET[t] - dep);
+
+  // Mileage adjustment: ±1.5% per 10k miles from average
+  const mileAdj = -(milesDelta / 10000) * MILE_ADJ;
+  const mid = Math.min(0.98, Math.max(0.35, baseRet + mileAdj));
+
+  return { lo: mid - 0.025, hi: mid + 0.025 };
+}
+
+// ─── Vehicle profile UI ──────────────────────────────────────────────────────
+function onProfileChange() {
+  const profile = $('profile').value;
+  const trimField = $('trim-field');
+  const trimSel = $('trim-sel');
+
+  if (profile && TRIMS[profile]) {
+    trimField.style.display = '';
+    trimSel.innerHTML = '<option value="">Select trim…</option>';
+    TRIMS[profile].forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.tier;
+      opt.textContent = t.label;
+      trimSel.appendChild(opt);
+    });
+  } else {
+    trimField.style.display = 'none';
+    trimSel.value = '';
+  }
+  calc();
+}
+
+// ─── VIN Decode ──────────────────────────────────────────────────────────────
 async function decodeVin() {
   const vin = $('vin').value.trim().toUpperCase();
   $('vin').value = vin;
@@ -382,12 +460,12 @@ async function decodeVin() {
     const results = data.Results;
     const get = name => results.find(r => r.Variable === name)?.Value || '';
 
-    const year = get('Model Year');
-    const make = get('Make');
+    const year  = get('Model Year');
+    const make  = get('Make');
     const model = get('Model');
-    const trim = get('Trim');
+    const trim  = get('Trim');
     const series = get('Series');
-    const body = get('Body Class');
+    const body  = get('Body Class');
 
     if (!year || year === 'Not Applicable' || !make) {
       $('vin-error').textContent = 'VIN not found — verify and try again.';
@@ -401,6 +479,21 @@ async function decodeVin() {
     $('carfax-link').href = `https://www.carfax.com/VinCheck/Results?vin=${vin}`;
     $('vehicle-info').style.display = 'flex';
 
+    // Auto-fill model year
+    if (year && !$('yr').value) $('yr').value = year;
+
+    // Auto-select vehicle profile based on make/model
+    const lmodel = model.toLowerCase();
+    const lmake  = make.toLowerCase();
+    let profile = '';
+    if (lmake.includes('gmc')  && lmodel.includes('yukon')) profile = 'yukon';
+    if (lmake.includes('chev') && lmodel.includes('tahoe')) profile = 'tahoe';
+    if (profile && $('profile').value !== profile) {
+      $('profile').value = profile;
+      onProfileChange();
+    }
+
+    calc();
   } catch (e) {
     $('vin-error').textContent = 'Decode failed — check connection and try again.';
     $('vin-error').style.display = 'block';
@@ -412,6 +505,26 @@ async function decodeVin() {
 
 $('vin').addEventListener('keydown', e => { if (e.key === 'Enter') decodeVin(); });
 
+// ─── Clear all ────────────────────────────────────────────────────────────────
+function clearAll() {
+  ['msrp','ask','target','odo','yr'].forEach(id => $(id).value = '');
+  ['tv','tp','dp','gf'].forEach(id => $(id).value = '0');
+  $('tf').value  = '150';
+  $('tr').value  = '6.25';
+  $('vr').value  = '6.99';
+  $('cr').value  = '4.99';
+  $('vtm').value = '60';
+  $('ctm').value = '60';
+  $('vin').value = '';
+  $('vehicle-info').style.display = 'none';
+  $('vin-error').style.display   = 'none';
+  $('profile').value = '';
+  $('trim-field').style.display = 'none';
+  $('trim-sel').value = '';
+  calc();
+}
+
+// ─── Main calculation ─────────────────────────────────────────────────────────
 function calc() {
   const msrp   = val('msrp');
   const ask    = val('ask');
@@ -426,22 +539,62 @@ function calc() {
   const vtm    = val('vtm');
   const ctm    = val('ctm');
   const gf     = val('gf');
+  const yr     = val('yr');
+  const odo    = val('odo');
+  const tier   = parseInt($('trim-sel').value) || 0;
 
   // Live labels
   if (msrp)   setLbl('lbl-msrp', fmt(msrp));
   if (ask)    setLbl('lbl-ask', fmt(ask));
   if (target) setLbl('lbl-target', fmt(target));
-  setLbl('lbl-tv',  fmt(tv));
-  setLbl('lbl-tp',  fmt(tp));
-  setLbl('lbl-dp',  fmt(dp));
-  setLbl('lbl-tf',  fmt(tf));
-  setLbl('lbl-tr',  fmtPct(tr, 2));
-  setLbl('lbl-vr',  fmtPct(vr, 2));
-  setLbl('lbl-cr',  fmtPct(cr, 2));
+  setLbl('lbl-tv', fmt(tv));
+  setLbl('lbl-tp', fmt(tp));
+  setLbl('lbl-dp', fmt(dp));
+  setLbl('lbl-tf', fmt(tf));
+  setLbl('lbl-tr', fmtPct(tr, 2));
+  setLbl('lbl-vr', fmtPct(vr, 2));
+  setLbl('lbl-cr', fmtPct(cr, 2));
   setLbl('lbl-vtm', vtm + ' mo');
   setLbl('lbl-ctm', ctm + ' mo');
+  if (yr)  setLbl('lbl-yr', yr);
+  if (odo) setLbl('lbl-odo', Math.round(odo).toLocaleString() + ' mi');
 
-  // Negotiation
+  // ── Market estimate ──
+  const showMarket = msrp > 0 && yr > 2000 && odo > 0 && tier > 0;
+  $('market-est-stat').style.display = showMarket ? '' : 'none';
+  $('market-vs-stat').style.display  = showMarket ? '' : 'none';
+  $('market-verdict').style.display  = showMarket && ask > 0 ? '' : 'none';
+
+  let mktLo = 0, mktHi = 0;
+  if (showMarket) {
+    const { lo, hi } = marketEstimate(yr, odo, tier);
+    mktLo = msrp * lo;
+    mktHi = msrp * hi;
+    $('n-market').textContent = fmt(mktLo) + ' – ' + fmt(mktHi);
+
+    if (ask > 0) {
+      const midMkt = (mktLo + mktHi) / 2;
+      const vsAmt  = ask - midMkt;
+      const vsPct  = vsAmt / midMkt * 100;
+      $('n-mkt-vs').textContent = (vsAmt >= 0 ? '+' : '') + fmt(vsAmt);
+      $('n-mkt-vs').style.color = vsAmt <= 0 ? 'var(--good)' : vsAmt <= midMkt * 0.03 ? 'var(--warn)' : 'var(--bad)';
+
+      const mv = $('market-verdict');
+      const mvt = $('n-mkt-verdict');
+      if (ask <= mktLo) {
+        mv.className = 'verdict good-row';
+        mvt.textContent = 'Below market — strong deal';
+      } else if (ask <= mktHi) {
+        mv.className = 'verdict warn-row';
+        mvt.textContent = 'At market · ' + (vsPct > 0 ? '+' : '') + fmtPct(vsPct) + ' vs midpoint';
+      } else {
+        mv.className = 'verdict bad-row';
+        mvt.textContent = fmt(ask - mktHi) + ' above market';
+      }
+    }
+  }
+
+  // ── Negotiation analytics ──
   const verdict = $('nego-verdict');
   const nStatus = $('n-status');
   if (msrp > 0 && ask > 0) {
@@ -477,52 +630,51 @@ function calc() {
     nStatus.textContent = 'Enter MSRP and asking price';
   }
 
-  // Purchase price = asking price (flows into financing)
+  // ── Deal math ──
   const pp = ask;
-
   if (!pp) {
-    const blanks = ['s-nte','s-tax','s-ttl','s-af','r-vvp','r-vv60','r-gf','r-vvt','r-cvp','r-cv60','r-cvt','r-ms','r-ts','r-ei','r-eq','r-gd','r-mv','r-el','r-eh'];
-    blanks.forEach(id => $(id).textContent = '—');
+    ['s-nte','s-tax','s-ttl','s-af','r-vvp','r-vv60','r-gf','r-vvt',
+     'r-cvp','r-cv60','r-cvt','r-ms','r-ts','r-ei','r-eq','r-gd','r-mv','r-el','r-eh'].forEach(id => $(id).textContent = '—');
+    setLbl('s-tax-note', '');
     return;
   }
 
-  // Deal math
   const nte = tv - tp;
-  const tax = Math.max(0, pp - tv) * (tr / 100);
+  // TX trade-in credit: tax only on (purchase price - trade-in value)
+  const taxableBase = Math.max(0, pp - tv);
+  const tax = taxableBase * (tr / 100);
   const ttl = tax + tf;
   const af  = pp - nte - dp + ttl;
 
-  setLbl('s-nte', fmt(nte));
-  setLbl('s-tax', fmt(tax));
-  setLbl('s-ttl', fmt(ttl));
-  setLbl('s-af',  fmt(af));
+  $('s-nte').textContent = fmt(nte);
+  $('s-tax').textContent = fmt(tax);
+  // Show the breakdown so it's clear how the trade-in credit applies
+  if (tv > 0) {
+    setLbl('s-tax-note', fmtPct(tr, 2) + ' × ' + fmt(taxableBase) + ' (credit: ' + fmt(tv) + ')');
+  } else {
+    setLbl('s-tax-note', fmtPct(tr, 2) + ' × ' + fmt(pp) + ' · no trade-in');
+  }
+  $('s-ttl').textContent = fmt(ttl);
+  $('s-af').textContent  = fmt(af);
 
-  // VehicleVantage balloon payment
+  // ── VehicleVantage payment ──
   const vmr = vr / 100 / 12;
   let vvp = 0;
   if (vtm > 0) {
-    if (vmr > 0) {
-      const vg = Math.pow(1 + vmr, vtm);
-      const vf = (1 - 1 / vg) / vmr;
-      vvp = (af - gf / vg) / vf;
-    } else {
-      vvp = (af - gf) / vtm;
-    }
+    vvp = vmr > 0
+      ? (af - gf / Math.pow(1 + vmr, vtm)) / ((1 - 1 / Math.pow(1 + vmr, vtm)) / vmr)
+      : (af - gf) / vtm;
   }
   const vv60 = vvp * vtm;
   const vvt  = vv60 + gf;
 
-  // Conventional payment
+  // ── Conventional payment ──
   const cmr = cr / 100 / 12;
   let cvp = 0;
   if (ctm > 0) {
-    if (cmr > 0) {
-      const cg = Math.pow(1 + cmr, ctm);
-      const cf = (1 - 1 / cg) / cmr;
-      cvp = af / cf;
-    } else {
-      cvp = af / ctm;
-    }
+    cvp = cmr > 0
+      ? af / ((1 - 1 / Math.pow(1 + cmr, ctm)) / cmr)
+      : af / ctm;
   }
   const cv60 = cvp * ctm;
 
@@ -534,7 +686,6 @@ function calc() {
   $('r-cv60').textContent = fmt(cv60);
   $('r-cvt').textContent  = fmt(cv60);
 
-  // Cash flow comparison (note: terms may differ)
   const ms    = cvp - vvp;
   const ts    = ms * vtm;
   const extra = vvt - cv60;
@@ -551,10 +702,8 @@ function calc() {
   eiEl.textContent = (extra >= 0 ? '' : '–') + fmt(Math.abs(extra));
   eiEl.className = 'stat-value ' + (extra >= 0 ? 'bad' : 'good');
 
-  // Residual / equity at term (use MSRP if available, else purchase price)
   const base = msrp || pp;
-  const lo = base * 0.45;
-  const hi = base * 0.55;
+  const lo = base * 0.45, hi = base * 0.55;
   $('r-eq').textContent = fmt(lo - gf) + ' – ' + fmt(hi - gf);
   $('r-gd').textContent = fmt(gf);
   $('r-mv').textContent = fmt(lo) + ' – ' + fmt(hi);
@@ -562,7 +711,7 @@ function calc() {
   $('r-eh').textContent = fmt(hi - gf);
 }
 
-['msrp','ask','target','tv','tp','dp','tr','tf','vr','cr','vtm','ctm','gf'].forEach(id => {
+['msrp','ask','target','tv','tp','dp','tr','tf','vr','cr','vtm','ctm','gf','yr','odo'].forEach(id => {
   $(id).addEventListener('input', calc);
 });
 
