@@ -582,19 +582,27 @@ function calc() {
   const ctm    = val('ctm');
   const rbfcuPay = val('rbfcu-pay');
 
-  // Derive GFV from RBFCU quoted payment if provided.
-  // RBFCU's simplification: AF = purchase price (no down, trade, or tax).
+  // Compute amount financed early — needed for GFV derivation and display.
+  const pp          = ask;
+  const nte         = tv - tp;
+  const taxableBase = Math.max(0, pp - tv);
+  const tax         = taxableBase * (tr / 100);
+  const ttl         = tax + tf;
+  const af          = pp > 0 ? pp - nte - dp + ttl : 0;
+
+  // Derive GFV from RBFCU quoted payment using the real amount financed.
+  // Enter AF into RBFCU's "purchase price" field to get the quoted payment.
   let gf;
-  if (rbfcuPay > 0 && ask > 0 && vr > 0 && vtm > 0) {
+  if (rbfcuPay > 0 && af > 0 && vr > 0 && vtm > 0) {
     const vmr_ = vr / 100 / 12;
     const vg_  = Math.pow(1 + vmr_, vtm);
     const vf_  = (1 - 1 / vg_) / vmr_;
-    const derived = Math.max(0, (ask - rbfcuPay * vf_) * vg_);
+    const derived = Math.max(0, (af - rbfcuPay * vf_) * vg_);
     $('gf').value    = Math.round(derived);
     $('gf').readOnly = true;
     $('gf').style.opacity = '0.55';
     $('gfv-note').style.display = '';
-    $('gfv-note').textContent   = '↑ GFV derived from RBFCU payment · clear above to enter manually';
+    $('gfv-note').textContent   = '↑ GFV derived · enter ' + fmt(af) + ' as purchase price in RBFCU calculator';
     gf = derived;
   } else {
     $('gf').readOnly = false;
@@ -696,20 +704,12 @@ function calc() {
   }
 
   // ── Deal math ──
-  const pp = ask;
   if (!pp) {
     ['s-nte','s-tax','s-ttl','s-af','r-vvp','r-vv60','r-gf','r-vvt',
      'r-cvp','r-cv60','r-cvt','r-ms','r-ts','r-ei','r-eq','r-gd','r-mv','r-el','r-eh'].forEach(id => $(id).textContent = '—');
     setLbl('s-tax-note', '');
     return;
   }
-
-  const nte = tv - tp;
-  // TX trade-in credit: tax only on (purchase price - trade-in value)
-  const taxableBase = Math.max(0, pp - tv);
-  const tax = taxableBase * (tr / 100);
-  const ttl = tax + tf;
-  const af  = pp - nte - dp + ttl;
 
   $('s-nte').textContent = fmt(nte);
   $('s-tax').textContent = fmt(tax);
