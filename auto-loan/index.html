@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auto Loan — Auto Shopping</title>
+<link rel="manifest" href="../manifest.json">
+<link rel="apple-touch-icon" href="../icons/icon-180.png">
+<meta name="theme-color" content="#1a1a1a">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --border: #e2e0d8;
+    --text: #111;
+    --muted: #888;
+    --good: #166534;
+    --good-bg: #dcfce7;
+    --warn: #92400e;
+    --warn-bg: #fef3c7;
+    --bad: #991b1b;
+    --bad-bg: #fee2e2;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 56px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  header { margin-bottom: 24px; }
+  header .back { font-size: 11px; color: var(--muted); text-decoration: none; display: inline-block; margin-bottom: 10px; }
+  header .back:hover { color: var(--text); }
+  header h1 { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  header p { font-size: 22px; font-weight: 300; color: var(--text); letter-spacing: -0.02em; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .field label .lval { font-family: var(--mono); font-size: 11px; color: var(--text); }
+  .field label .llink { font-family: var(--mono); font-size: 11px; color: #2563eb; text-decoration: none; }
+  .field label .llink:hover { text-decoration: underline; }
+
+  .field input, .field select {
+    width: 100%; height: 40px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg); font-family: var(--mono); font-size: 14px; color: var(--text);
+    padding: 0 12px; outline: none; transition: border-color 0.15s; -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus { border-color: #aaa; background: #fff; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* VIN */
+  .vin-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; }
+  .vin-row .field { flex: 1; margin-bottom: 0; }
+  .decode-btn {
+    height: 40px; padding: 0 16px; background: var(--text); color: #fff;
+    border: none; border-radius: 8px; font-family: var(--sans); font-size: 13px;
+    font-weight: 500; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  }
+  .decode-btn:disabled { opacity: 0.55; cursor: default; }
+
+  .vehicle-pill {
+    background: var(--bg); border-radius: 8px; padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+  .vehicle-name { font-size: 15px; font-weight: 500; }
+  .vehicle-trim { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+  .ext-link { font-size: 12px; color: #2563eb; text-decoration: none; white-space: nowrap; }
+  .ext-link:hover { text-decoration: underline; }
+  .error-msg { font-size: 12px; color: var(--bad); margin-top: 6px; }
+
+  /* Negotiation analytics */
+  .nego-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .nego-stat { background: var(--bg); border-radius: 8px; padding: 10px 12px; }
+  .nego-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .nego-value { font-family: var(--mono); font-size: 16px; font-weight: 500; }
+
+  .verdict {
+    border-radius: 8px; padding: 10px 14px; display: flex; align-items: center;
+    justify-content: space-between; margin-top: 10px; background: var(--bg);
+  }
+  .verdict-label { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+  .verdict-value { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  .good-row { background: var(--good-bg); color: var(--good); }
+  .warn-row { background: var(--warn-bg); color: var(--warn); }
+  .bad-row  { background: var(--bad-bg);  color: var(--bad); }
+
+  /* Deal summary metrics */
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .metric { background: var(--bg); border-radius: 8px; padding: 10px 12px; }
+  .metric.accent { border: 1px solid #bbb; }
+  .metric-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .metric-value { font-family: var(--mono); font-size: 16px; font-weight: 500; }
+
+  /* Financing columns */
+  .fin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .fin-col-title { font-size: 12px; font-weight: 500; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .badge { font-size: 10px; background: #eff6ff; color: #2563eb; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+
+  /* Results */
+  .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .pay-card { background: var(--bg); border-radius: 10px; padding: 14px; }
+  .pay-card.highlighted { border: 2px solid #bfdbfe; }
+  .pay-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .pay-amount { font-family: var(--mono); font-size: 22px; font-weight: 500; margin-bottom: 2px; }
+  .pay-sub { font-size: 10px; color: var(--muted); margin-bottom: 10px; font-family: var(--mono); }
+
+  .breakdown { border-top: 1px solid var(--border); padding-top: 10px; }
+  .br-row { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; font-size: 12px; }
+  .br-row span:first-child { color: var(--muted); }
+  .br-row span:last-child { font-family: var(--mono); }
+  .br-row.total { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 6px; font-weight: 500; }
+  .br-row.total span:first-child { color: var(--text); }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { background: var(--bg); border-radius: 8px; padding: 12px; }
+  .stat-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .stat-value { font-family: var(--mono); font-size: 18px; font-weight: 500; }
+  .stat-sub { font-size: 10px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+  .good { color: var(--good); }
+  .bad  { color: var(--bad); }
+
+  .section-gap { margin-top: 16px; margin-bottom: 12px; }
+
+  @media (max-width: 400px) {
+    .fin-grid { grid-template-columns: 1fr; }
+    .pay-grid { grid-template-columns: 1fr; }
+  }
+
+  footer { text-align: center; font-size: 10px; color: var(--muted); margin-top: 8px; letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../">← Auto Shopping</a>
+  <h1>Auto Loan</h1>
+  <p>Purchase & financing calculator</p>
+</header>
+
+<!-- Vehicle -->
+<div class="card">
+  <div class="card-title">Vehicle</div>
+  <div class="vin-row">
+    <div class="field">
+      <label>VIN</label>
+      <input type="text" id="vin" placeholder="17-character VIN" maxlength="17" autocomplete="off" spellcheck="false" style="text-transform:uppercase">
+    </div>
+    <button class="decode-btn" id="decode-btn" onclick="decodeVin()">Decode</button>
+  </div>
+  <div id="vehicle-info" style="display:none" class="vehicle-pill">
+    <div>
+      <div class="vehicle-name" id="v-name"></div>
+      <div class="vehicle-trim" id="v-trim"></div>
+    </div>
+    <a id="carfax-link" href="#" target="_blank" class="ext-link">Carfax ↗</a>
+  </div>
+  <div id="vin-error" class="error-msg" style="display:none"></div>
+</div>
+
+<!-- Negotiation -->
+<div class="card">
+  <div class="card-title">Negotiation</div>
+  <div class="field">
+    <label>MSRP / Retail <span class="lval" id="lbl-msrp"></span></label>
+    <input type="number" id="msrp" min="0" step="100" placeholder="0">
+  </div>
+  <div class="row2">
+    <div class="field">
+      <label>Dealer asking <span class="lval" id="lbl-ask"></span></label>
+      <input type="number" id="ask" min="0" step="100" placeholder="0">
+    </div>
+    <div class="field">
+      <label>Your target <span class="lval" id="lbl-target"></span></label>
+      <input type="number" id="target" min="0" step="100" placeholder="0">
+    </div>
+  </div>
+  <div class="nego-grid">
+    <div class="nego-stat">
+      <div class="nego-label">Discount from MSRP</div>
+      <div class="nego-value" id="n-disc">—</div>
+    </div>
+    <div class="nego-stat">
+      <div class="nego-label">Discount %</div>
+      <div class="nego-value" id="n-disc-pct">—</div>
+    </div>
+    <div class="nego-stat">
+      <div class="nego-label">Gap to target</div>
+      <div class="nego-value" id="n-gap">—</div>
+    </div>
+    <div class="nego-stat">
+      <div class="nego-label">Target off MSRP</div>
+      <div class="nego-value" id="n-tgt-pct">—</div>
+    </div>
+  </div>
+  <div class="verdict" id="nego-verdict">
+    <span class="verdict-label">Deal status</span>
+    <span class="verdict-value" id="n-status">Enter MSRP and asking price</span>
+  </div>
+</div>
+
+<!-- Deal Structure -->
+<div class="card">
+  <div class="card-title">Deal Structure</div>
+  <div class="row2">
+    <div class="field">
+      <label>Trade-in value <span class="lval" id="lbl-tv"></span></label>
+      <input type="number" id="tv" value="0" min="0" step="100">
+    </div>
+    <div class="field">
+      <label>Trade-in payoff <span class="lval" id="lbl-tp"></span></label>
+      <input type="number" id="tp" value="0" min="0" step="100">
+    </div>
+  </div>
+  <div class="row2">
+    <div class="field">
+      <label>Down payment <span class="lval" id="lbl-dp"></span></label>
+      <input type="number" id="dp" value="0" min="0" step="100">
+    </div>
+    <div class="field">
+      <label>Title &amp; fees <span class="lval" id="lbl-tf"></span></label>
+      <input type="number" id="tf" value="150" min="0" step="50">
+    </div>
+  </div>
+  <div class="field">
+    <label>Sales tax % <span class="lval" id="lbl-tr"></span></label>
+    <input type="number" id="tr" value="6.25" min="0" step="0.01">
+  </div>
+  <div class="metric-grid">
+    <div class="metric">
+      <div class="metric-label">Net trade equity</div>
+      <div class="metric-value" id="s-nte">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Tax (trade-in credit)</div>
+      <div class="metric-value" id="s-tax">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">TT&amp;L total</div>
+      <div class="metric-value" id="s-ttl">—</div>
+    </div>
+    <div class="metric accent">
+      <div class="metric-label">Amount financed</div>
+      <div class="metric-value" id="s-af">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- Financing -->
+<div class="card">
+  <div class="card-title">Financing Options</div>
+  <div class="fin-grid">
+    <div>
+      <div class="fin-col-title">VehicleVantage <span class="badge">Balloon</span></div>
+      <div class="field">
+        <label>Rate % <span class="lval" id="lbl-vr"></span></label>
+        <input type="number" id="vr" value="6.99" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Term <span class="lval" id="lbl-vtm"></span></label>
+        <input type="number" id="vtm" value="60" min="12" step="6">
+      </div>
+      <div class="field">
+        <label>GFV / Balloon <a class="llink" href="https://www.rbfcu.org/loans/auto-loans/vehiclevantage/calculator" target="_blank">Get from RBFCU ↗</a></label>
+        <input type="number" id="gf" value="0" min="0" step="100">
+      </div>
+    </div>
+    <div>
+      <div class="fin-col-title">Conventional</div>
+      <div class="field">
+        <label>Rate % <span class="lval" id="lbl-cr"></span></label>
+        <input type="number" id="cr" value="4.99" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Term <span class="lval" id="lbl-ctm"></span></label>
+        <input type="number" id="ctm" value="60" min="12" step="6">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Results -->
+<div class="card">
+  <div class="card-title">Payment Comparison</div>
+  <div class="pay-grid">
+    <div class="pay-card highlighted">
+      <div class="pay-label">VehicleVantage</div>
+      <div class="pay-amount" id="r-vvp">—</div>
+      <div class="pay-sub">/ month</div>
+      <div class="breakdown">
+        <div class="br-row"><span>Outlay × term</span><span id="r-vv60">—</span></div>
+        <div class="br-row"><span>Balloon due</span><span id="r-gf">—</span></div>
+        <div class="br-row total"><span>Total cost</span><span id="r-vvt">—</span></div>
+      </div>
+    </div>
+    <div class="pay-card">
+      <div class="pay-label">Conventional</div>
+      <div class="pay-amount" id="r-cvp">—</div>
+      <div class="pay-sub">/ month</div>
+      <div class="breakdown">
+        <div class="br-row"><span>Outlay × term</span><span id="r-cv60">—</span></div>
+        <div class="br-row"><span>Balloon due</span><span style="color:var(--muted);font-family:var(--mono)">$0</span></div>
+        <div class="br-row total"><span>Total cost</span><span id="r-cvt">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-title section-gap">Cash Flow &amp; Arbitrage</div>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-label">Monthly savings</div>
+      <div class="stat-value" id="r-ms">—</div>
+      <div class="stat-sub">vs conventional</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Cash freed</div>
+      <div class="stat-value" id="r-ts">—</div>
+      <div class="stat-sub">total over term</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Extra interest</div>
+      <div class="stat-value" id="r-ei">—</div>
+      <div class="stat-sub">higher rate cost</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Est. equity at term</div>
+      <div class="stat-value" id="r-eq">—</div>
+      <div class="stat-sub">above balloon</div>
+    </div>
+  </div>
+
+  <div class="breakdown" style="margin-top:16px">
+    <div class="br-row"><span>GFV (balloon due)</span><span id="r-gd">—</span></div>
+    <div class="br-row"><span>Market value at term (45–55% of MSRP)</span><span id="r-mv">—</span></div>
+    <div class="br-row"><span>Equity cushion — conservative</span><span id="r-el" style="color:var(--good)">—</span></div>
+    <div class="br-row"><span>Equity cushion — optimistic</span><span id="r-eh" style="color:var(--good)">—</span></div>
+  </div>
+</div>
+
+<footer>NHTSA VIN decode · RBFCU VehicleVantage · TX trade-in tax credit applied</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+const fmtPct = (n, d=1) => n.toFixed(d) + '%';
+const val = id => parseFloat($(id).value) || 0;
+const setLbl = (id, text) => { const el = $(id); if (el) el.textContent = text; };
+
+// VIN Decode via NHTSA public API
+async function decodeVin() {
+  const vin = $('vin').value.trim().toUpperCase();
+  $('vin').value = vin;
+  $('vehicle-info').style.display = 'none';
+  $('vin-error').style.display = 'none';
+
+  if (vin.length !== 17) {
+    $('vin-error').textContent = 'VIN must be 17 characters.';
+    $('vin-error').style.display = 'block';
+    return;
+  }
+
+  const btn = $('decode-btn');
+  btn.textContent = 'Loading…';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`);
+    const data = await res.json();
+    const results = data.Results;
+    const get = name => results.find(r => r.Variable === name)?.Value || '';
+
+    const year = get('Model Year');
+    const make = get('Make');
+    const model = get('Model');
+    const trim = get('Trim');
+    const series = get('Series');
+    const body = get('Body Class');
+
+    if (!year || year === 'Not Applicable' || !make) {
+      $('vin-error').textContent = 'VIN not found — verify and try again.';
+      $('vin-error').style.display = 'block';
+      return;
+    }
+
+    $('v-name').textContent = `${year} ${make} ${model}`;
+    const sub = [trim, series, body].filter(s => s && s !== 'Not Applicable').join(' · ');
+    $('v-trim').textContent = sub || '';
+    $('carfax-link').href = `https://www.carfax.com/VinCheck/Results?vin=${vin}`;
+    $('vehicle-info').style.display = 'flex';
+
+  } catch (e) {
+    $('vin-error').textContent = 'Decode failed — check connection and try again.';
+    $('vin-error').style.display = 'block';
+  } finally {
+    btn.textContent = 'Decode';
+    btn.disabled = false;
+  }
+}
+
+$('vin').addEventListener('keydown', e => { if (e.key === 'Enter') decodeVin(); });
+
+function calc() {
+  const msrp   = val('msrp');
+  const ask    = val('ask');
+  const target = val('target');
+  const tv     = val('tv');
+  const tp     = val('tp');
+  const dp     = val('dp');
+  const tr     = val('tr');
+  const tf     = val('tf');
+  const vr     = val('vr');
+  const cr     = val('cr');
+  const vtm    = val('vtm');
+  const ctm    = val('ctm');
+  const gf     = val('gf');
+
+  // Live labels
+  if (msrp)   setLbl('lbl-msrp', fmt(msrp));
+  if (ask)    setLbl('lbl-ask', fmt(ask));
+  if (target) setLbl('lbl-target', fmt(target));
+  setLbl('lbl-tv',  fmt(tv));
+  setLbl('lbl-tp',  fmt(tp));
+  setLbl('lbl-dp',  fmt(dp));
+  setLbl('lbl-tf',  fmt(tf));
+  setLbl('lbl-tr',  fmtPct(tr, 2));
+  setLbl('lbl-vr',  fmtPct(vr, 2));
+  setLbl('lbl-cr',  fmtPct(cr, 2));
+  setLbl('lbl-vtm', vtm + ' mo');
+  setLbl('lbl-ctm', ctm + ' mo');
+
+  // Negotiation
+  const verdict = $('nego-verdict');
+  const nStatus = $('n-status');
+  if (msrp > 0 && ask > 0) {
+    const disc    = msrp - ask;
+    const discPct = disc / msrp * 100;
+    const gap     = ask - target;
+    const tgtPct  = target > 0 ? (msrp - target) / msrp * 100 : null;
+
+    $('n-disc').textContent     = fmt(disc);
+    $('n-disc').style.color     = disc >= 0 ? 'var(--good)' : 'var(--bad)';
+    $('n-disc-pct').textContent = fmtPct(discPct);
+    $('n-disc-pct').style.color = discPct >= 3 ? 'var(--good)' : discPct >= 0 ? '' : 'var(--bad)';
+    $('n-gap').textContent      = target > 0 ? (gap > 0 ? fmt(gap) : 'At target') : '—';
+    $('n-gap').style.color      = gap <= 0 ? 'var(--good)' : gap <= msrp * 0.02 ? 'var(--warn)' : 'var(--bad)';
+    $('n-tgt-pct').textContent  = tgtPct !== null ? fmtPct(tgtPct) : '—';
+
+    if (ask <= target) {
+      verdict.className = 'verdict good-row';
+      nStatus.textContent = 'At or below target';
+    } else if (target > 0 && gap <= msrp * 0.02) {
+      verdict.className = 'verdict warn-row';
+      nStatus.textContent = `${fmt(gap)} to close — within range`;
+    } else if (target > 0) {
+      verdict.className = 'verdict bad-row';
+      nStatus.textContent = `${fmt(gap)} gap to target`;
+    } else {
+      verdict.className = 'verdict';
+      nStatus.textContent = fmtPct(discPct) + ' off MSRP';
+    }
+  } else {
+    ['n-disc','n-disc-pct','n-gap','n-tgt-pct'].forEach(id => { $(id).textContent = '—'; $(id).style.color = ''; });
+    verdict.className = 'verdict';
+    nStatus.textContent = 'Enter MSRP and asking price';
+  }
+
+  // Purchase price = asking price (flows into financing)
+  const pp = ask;
+
+  if (!pp) {
+    const blanks = ['s-nte','s-tax','s-ttl','s-af','r-vvp','r-vv60','r-gf','r-vvt','r-cvp','r-cv60','r-cvt','r-ms','r-ts','r-ei','r-eq','r-gd','r-mv','r-el','r-eh'];
+    blanks.forEach(id => $(id).textContent = '—');
+    return;
+  }
+
+  // Deal math
+  const nte = tv - tp;
+  const tax = Math.max(0, pp - tv) * (tr / 100);
+  const ttl = tax + tf;
+  const af  = pp - nte - dp + ttl;
+
+  setLbl('s-nte', fmt(nte));
+  setLbl('s-tax', fmt(tax));
+  setLbl('s-ttl', fmt(ttl));
+  setLbl('s-af',  fmt(af));
+
+  // VehicleVantage balloon payment
+  const vmr = vr / 100 / 12;
+  let vvp = 0;
+  if (vtm > 0) {
+    if (vmr > 0) {
+      const vg = Math.pow(1 + vmr, vtm);
+      const vf = (1 - 1 / vg) / vmr;
+      vvp = (af - gf / vg) / vf;
+    } else {
+      vvp = (af - gf) / vtm;
+    }
+  }
+  const vv60 = vvp * vtm;
+  const vvt  = vv60 + gf;
+
+  // Conventional payment
+  const cmr = cr / 100 / 12;
+  let cvp = 0;
+  if (ctm > 0) {
+    if (cmr > 0) {
+      const cg = Math.pow(1 + cmr, ctm);
+      const cf = (1 - 1 / cg) / cmr;
+      cvp = af / cf;
+    } else {
+      cvp = af / ctm;
+    }
+  }
+  const cv60 = cvp * ctm;
+
+  $('r-vvp').textContent  = fmt(vvp) + '/mo';
+  $('r-vv60').textContent = fmt(vv60);
+  $('r-gf').textContent   = fmt(gf);
+  $('r-vvt').textContent  = fmt(vvt);
+  $('r-cvp').textContent  = fmt(cvp) + '/mo';
+  $('r-cv60').textContent = fmt(cv60);
+  $('r-cvt').textContent  = fmt(cv60);
+
+  // Cash flow comparison (note: terms may differ)
+  const ms    = cvp - vvp;
+  const ts    = ms * vtm;
+  const extra = vvt - cv60;
+
+  const msEl = $('r-ms');
+  msEl.textContent = (ms >= 0 ? '' : '–') + fmt(Math.abs(ms)) + '/mo';
+  msEl.className = 'stat-value ' + (ms >= 0 ? 'good' : 'bad');
+
+  const tsEl = $('r-ts');
+  tsEl.textContent = (ts >= 0 ? '' : '–') + fmt(Math.abs(ts));
+  tsEl.className = 'stat-value ' + (ts >= 0 ? 'good' : 'bad');
+
+  const eiEl = $('r-ei');
+  eiEl.textContent = (extra >= 0 ? '' : '–') + fmt(Math.abs(extra));
+  eiEl.className = 'stat-value ' + (extra >= 0 ? 'bad' : 'good');
+
+  // Residual / equity at term (use MSRP if available, else purchase price)
+  const base = msrp || pp;
+  const lo = base * 0.45;
+  const hi = base * 0.55;
+  $('r-eq').textContent = fmt(lo - gf) + ' – ' + fmt(hi - gf);
+  $('r-gd').textContent = fmt(gf);
+  $('r-mv').textContent = fmt(lo) + ' – ' + fmt(hi);
+  $('r-el').textContent = fmt(lo - gf);
+  $('r-eh').textContent = fmt(hi - gf);
+}
+
+['msrp','ask','target','tv','tp','dp','tr','tf','vr','cr','vtm','ctm','gf'].forEach(id => {
+  $(id).addEventListener('input', calc);
+});
+
+calc();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/auto-shopping/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

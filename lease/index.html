@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lease — Auto Shopping</title>
+<link rel="manifest" href="../manifest.json">
+<link rel="apple-touch-icon" href="../icons/icon-180.png">
+<meta name="theme-color" content="#1a1a1a">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --border: #e2e0d8;
+    --text: #111;
+    --muted: #888;
+    --good: #166534;
+    --good-bg: #dcfce7;
+    --warn: #92400e;
+    --warn-bg: #fef3c7;
+    --bad: #991b1b;
+    --bad-bg: #fee2e2;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 56px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  header { margin-bottom: 24px; }
+  header .back { font-size: 11px; color: var(--muted); text-decoration: none; display: inline-block; margin-bottom: 10px; }
+  header .back:hover { color: var(--text); }
+  header h1 { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  header p { font-size: 22px; font-weight: 300; color: var(--text); letter-spacing: -0.02em; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12px; color: var(--muted); margin-bottom: 6px;
+  }
+  .field label .lval { font-family: var(--mono); font-size: 11px; color: var(--text); }
+  .field label .hint { font-size: 11px; color: var(--muted); font-style: italic; }
+
+  .field input, .field select {
+    width: 100%; height: 40px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg); font-family: var(--mono); font-size: 14px; color: var(--text);
+    padding: 0 12px; outline: none; transition: border-color 0.15s; -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus { border-color: #aaa; background: #fff; }
+
+  /* Calculated / read-only display fields */
+  .field .calc-val {
+    width: 100%; height: 40px; border: 1px dashed var(--border); border-radius: 8px;
+    background: transparent; font-family: var(--mono); font-size: 14px; color: var(--text);
+    padding: 0 12px; display: flex; align-items: center;
+  }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  /* Stat blocks */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat { background: var(--bg); border-radius: 8px; padding: 12px; }
+  .stat.full { grid-column: 1 / -1; }
+  .stat-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .stat-value { font-family: var(--mono); font-size: 20px; font-weight: 500; letter-spacing: -0.02em; }
+  .stat-sub { font-size: 10px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+
+  /* Verdict rows */
+  .verdict {
+    border-radius: 8px; padding: 11px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .verdict:last-child { margin-bottom: 0; }
+  .verdict-label { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+  .verdict-value { font-family: var(--mono); font-size: 12px; font-weight: 500; text-align: right; }
+  .good-row  { background: var(--good-bg); color: var(--good); }
+  .warn-row  { background: var(--warn-bg); color: var(--warn); }
+  .bad-row   { background: var(--bad-bg);  color: var(--bad); }
+  .neutral-row { background: var(--bg); color: var(--text); }
+
+  /* Breakdown */
+  .breakdown { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px; }
+  .br-row { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; font-size: 12px; }
+  .br-row span:first-child { color: var(--muted); }
+  .br-row span:last-child { font-family: var(--mono); font-size: 12px; }
+  .br-row.total { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 8px; font-weight: 500; }
+  .br-row.total span:first-child { color: var(--text); }
+
+  footer { text-align: center; font-size: 10px; color: var(--muted); margin-top: 8px; letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../">← Auto Shopping</a>
+  <h1>Lease</h1>
+  <p>Value calculator</p>
+</header>
+
+<!-- Vehicle & Terms -->
+<div class="card">
+  <div class="card-title">Vehicle</div>
+  <div class="field">
+    <label>MSRP <span class="lval" id="lbl-msrp"></span></label>
+    <input type="number" id="msrp" value="60000" min="0" step="500">
+  </div>
+  <div class="field">
+    <label>Selling price (cap cost) <span class="lval" id="lbl-cap"></span></label>
+    <input type="number" id="cap" value="57000" min="0" step="500">
+  </div>
+  <div class="row2">
+    <div class="field">
+      <label>Term <span class="lval" id="lbl-term"></span></label>
+      <select id="term">
+        <option value="24">24 mo</option>
+        <option value="36" selected>36 mo</option>
+        <option value="39">39 mo</option>
+        <option value="48">48 mo</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Miles / yr <span class="lval" id="lbl-miles"></span></label>
+      <select id="miles">
+        <option value="7500">7,500</option>
+        <option value="10000" selected>10,000</option>
+        <option value="12000">12,000</option>
+        <option value="15000">15,000</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- Lender Terms -->
+<div class="card">
+  <div class="card-title">Lender Terms</div>
+  <div class="row2">
+    <div class="field">
+      <label>Money factor <span class="lval" id="lbl-mf"></span></label>
+      <input type="number" id="mf" value="0.00125" min="0" step="0.00001">
+    </div>
+    <div class="field">
+      <label>Buy rate MF <span class="hint">optional</span></label>
+      <input type="number" id="mf-buy" value="" min="0" step="0.00001" placeholder="same as MF">
+    </div>
+  </div>
+  <div class="row2">
+    <div class="field">
+      <label>Residual % <span class="lval" id="lbl-res"></span></label>
+      <input type="number" id="res" value="55" min="0" max="100" step="0.5">
+    </div>
+    <div class="field">
+      <label>Acq. fee <span class="lval" id="lbl-acq"></span></label>
+      <input type="number" id="acq" value="925" min="0" step="25">
+    </div>
+  </div>
+  <div class="field">
+    <label>Cap cost reduction (cash down) <span class="lval" id="lbl-ccr"></span></label>
+    <input type="number" id="ccr" value="0" min="0" step="100">
+  </div>
+</div>
+
+<!-- Results -->
+<div class="card">
+  <div class="card-title">Results</div>
+
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-label">Monthly payment</div>
+      <div class="stat-value" id="out-monthly">—</div>
+      <div class="stat-sub">before tax</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Effective / mo</div>
+      <div class="stat-value" id="out-effective">—</div>
+      <div class="stat-sub">total outlay ÷ term</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">APR equivalent</div>
+      <div class="stat-value" id="out-apr">—</div>
+      <div class="stat-sub">MF × 2400</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Residual value</div>
+      <div class="stat-value" id="out-resval">—</div>
+      <div class="stat-sub">buyout at end</div>
+    </div>
+  </div>
+
+  <!-- Verdicts -->
+  <div class="verdict neutral-row" id="v-1pct">
+    <span class="verdict-label">1% rule</span>
+    <span class="verdict-value" id="out-1pct">—</span>
+  </div>
+  <div class="verdict neutral-row" id="v-mf">
+    <span class="verdict-label">Money factor</span>
+    <span class="verdict-value" id="out-mf-rating">—</span>
+  </div>
+  <div class="verdict neutral-row" id="v-markup">
+    <span class="verdict-label">MF markup</span>
+    <span class="verdict-value" id="out-markup">—</span>
+  </div>
+  <div class="verdict neutral-row" id="v-res">
+    <span class="verdict-label">Residual</span>
+    <span class="verdict-value" id="out-res-rating">—</span>
+  </div>
+
+  <!-- Breakdown -->
+  <div class="breakdown">
+    <div class="br-row"><span>Depreciation / mo</span><span id="out-dep">—</span></div>
+    <div class="br-row"><span>Finance charge / mo</span><span id="out-fin">—</span></div>
+    <div class="br-row"><span>Acq. fee (rolled into cap)</span><span id="out-acq">—</span></div>
+    <div class="br-row"><span>Due at signing</span><span id="out-das">—</span></div>
+    <div class="br-row total"><span>Total lease cost</span><span id="out-total">—</span></div>
+  </div>
+</div>
+
+<footer>payment excludes tax · acq. fee rolled into cap · leasehackr.com for current MF by brand</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + Math.round(n).toLocaleString();
+const val = id => parseFloat($(id).value) || 0;
+
+function calc() {
+  const msrp   = val('msrp');
+  const capRaw = val('cap');
+  const term   = parseInt($('term').value);
+  const miles  = parseInt($('miles').value);
+  const mf     = val('mf');
+  const mfBuy  = parseFloat($('mf-buy').value) || null;
+  const resPct = val('res');
+  const acq    = val('acq');
+  const ccr    = val('ccr');
+
+  // Live labels
+  $('lbl-msrp').textContent  = fmt(msrp);
+  $('lbl-cap').textContent   = fmt(capRaw);
+  $('lbl-term').textContent  = term + ' mo';
+  $('lbl-miles').textContent = miles.toLocaleString() + '/yr';
+  $('lbl-mf').textContent    = mf.toFixed(5);
+  $('lbl-res').textContent   = resPct.toFixed(1) + '%';
+  $('lbl-acq').textContent   = fmt(acq);
+  $('lbl-ccr').textContent   = fmt(ccr);
+
+  // Core lease math
+  // Acq fee rolled into cap cost (not paid separately at signing)
+  const adjCap = capRaw - ccr + acq;
+  const resVal = msrp * (resPct / 100);
+  const dep    = (adjCap - resVal) / term;
+  const fin    = (adjCap + resVal) * mf;
+  const monthly = dep + fin;
+
+  // Due at signing: cap reduction + first month payment
+  // (acq is in cap, not a separate DAS line)
+  const das = ccr + monthly;
+
+  // Total cost = all monthly payments + cap reduction (what you actually spend)
+  const totalCost = (monthly * term) + ccr;
+
+  // Effective monthly = total spent / term
+  const effective = totalCost / term;
+
+  const apr = mf * 2400;
+  const pctMSRP = msrp > 0 ? monthly / msrp : 0;
+
+  $('out-monthly').textContent   = fmt(monthly);
+  $('out-effective').textContent = fmt(effective);
+  $('out-apr').textContent       = apr.toFixed(2) + '%';
+  $('out-resval').textContent    = fmt(resVal);
+  $('out-dep').textContent       = fmt(dep);
+  $('out-fin').textContent       = fmt(fin);
+  $('out-acq').textContent       = fmt(acq);
+  $('out-das').textContent       = fmt(das);
+  $('out-total').textContent     = fmt(totalCost);
+
+  // 1% rule
+  const v1 = $('v-1pct');
+  const pct = (pctMSRP * 100).toFixed(2);
+  $('out-1pct').textContent = pct + '% of MSRP';
+  v1.className = 'verdict ' + (pctMSRP <= 0.01 ? 'good-row' : pctMSRP <= 0.013 ? 'warn-row' : 'bad-row');
+
+  // Money factor rating
+  const vmf = $('v-mf');
+  $('out-mf-rating').textContent = mf.toFixed(5) + ' — ' + apr.toFixed(2) + '% APR';
+  vmf.className = 'verdict ' + (apr <= 3 ? 'good-row' : apr <= 5 ? 'warn-row' : 'bad-row');
+
+  // MF markup (dealer markup over buy rate)
+  const vMarkup = $('v-markup');
+  if (mfBuy !== null) {
+    const markup    = mf - mfBuy;
+    const markupApr = markup * 2400;
+    const markupCost = (adjCap + resVal) * markup * term;
+    if (markup <= 0) {
+      vMarkup.className = 'verdict good-row';
+      $('out-markup').textContent = 'None — at buy rate';
+    } else {
+      vMarkup.className = 'verdict bad-row';
+      $('out-markup').textContent = `+${markup.toFixed(5)} (${markupApr.toFixed(2)}% APR) · ${fmt(markupCost)} extra`;
+    }
+  } else {
+    vMarkup.className = 'verdict neutral-row';
+    $('out-markup').textContent = 'Enter buy rate to check';
+  }
+
+  // Residual rating
+  const vres = $('v-res');
+  const resLabel = resPct >= 55 ? 'strong' : resPct >= 45 ? 'fair' : 'weak';
+  $('out-res-rating').textContent = resPct.toFixed(1) + '% — ' + resLabel;
+  vres.className = 'verdict ' + (resPct >= 55 ? 'good-row' : resPct >= 45 ? 'warn-row' : 'bad-row');
+}
+
+['msrp','cap','term','miles','mf','mf-buy','res','acq','ccr'].forEach(id => {
+  $(id).addEventListener('input', calc);
+});
+
+calc();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/auto-shopping/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
