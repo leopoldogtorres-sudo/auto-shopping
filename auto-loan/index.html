@@ -289,9 +289,14 @@
         <input type="number" id="vtm" value="60" min="12" step="6">
       </div>
       <div class="field">
+        <label>RBFCU quoted / mo <span class="lhint">→ auto-derives GFV</span></label>
+        <input type="number" id="rbfcu-pay" placeholder="e.g. 1,204" min="0" step="1">
+      </div>
+      <div class="field">
         <label>GFV / Balloon <a class="llink" href="https://www.rbfcu.org/loans/auto-loans/vehiclevantage/calculator" target="_blank">Get from RBFCU ↗</a></label>
         <input type="number" id="gf" value="0" min="0" step="100">
       </div>
+      <div id="gfv-note" style="display:none;font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:-10px;margin-bottom:12px;padding-left:2px"></div>
     </div>
     <div>
       <div class="fin-col-title">Conventional</div>
@@ -542,6 +547,10 @@ $('vin').addEventListener('keydown', e => { if (e.key === 'Enter') decodeVin(); 
 function clearAll() {
   ['msrp','ask','target','odo','yr'].forEach(id => $(id).value = '');
   ['tv','tp','dp','gf'].forEach(id => $(id).value = '0');
+  $('rbfcu-pay').value = '';
+  $('gf').readOnly = false;
+  $('gf').style.opacity = '';
+  $('gfv-note').style.display = 'none';
   $('tf').value  = '150';
   $('tr').value  = '6.25';
   $('vr').value  = '6.99';
@@ -571,7 +580,28 @@ function calc() {
   const cr     = val('cr');
   const vtm    = val('vtm');
   const ctm    = val('ctm');
-  const gf     = val('gf');
+  const rbfcuPay = val('rbfcu-pay');
+
+  // Derive GFV from RBFCU quoted payment if provided.
+  // RBFCU's simplification: AF = purchase price (no down, trade, or tax).
+  let gf;
+  if (rbfcuPay > 0 && ask > 0 && vr > 0 && vtm > 0) {
+    const vmr_ = vr / 100 / 12;
+    const vg_  = Math.pow(1 + vmr_, vtm);
+    const vf_  = (1 - 1 / vg_) / vmr_;
+    const derived = Math.max(0, (ask - rbfcuPay * vf_) * vg_);
+    $('gf').value    = Math.round(derived);
+    $('gf').readOnly = true;
+    $('gf').style.opacity = '0.55';
+    $('gfv-note').style.display = '';
+    $('gfv-note').textContent   = '↑ GFV derived from RBFCU payment · clear above to enter manually';
+    gf = derived;
+  } else {
+    $('gf').readOnly = false;
+    $('gf').style.opacity = '';
+    $('gfv-note').style.display = 'none';
+    gf = val('gf');
+  }
   const yr     = val('yr');
   const odo    = val('odo');
   const trimOpt = $('trim-sel').selectedOptions[0];
@@ -746,7 +776,7 @@ function calc() {
   $('r-eh').textContent = fmt(hi - gf);
 }
 
-['msrp','ask','target','tv','tp','dp','tr','tf','vr','cr','vtm','ctm','gf','yr','odo'].forEach(id => {
+['msrp','ask','target','tv','tp','dp','tr','tf','vr','cr','vtm','ctm','gf','yr','odo','rbfcu-pay'].forEach(id => {
   $(id).addEventListener('input', calc);
 });
 
